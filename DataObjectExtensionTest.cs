@@ -141,6 +141,7 @@ namespace DataObjectExtensionTest
        Assert.IsFalse(hashBefore.SequenceEqual(hashAfter), "The hash value before and after a change on the object should be different.");
     }
 
+
     [TestMethod]
     public void SameTypeCompareDefaultTest()
     {
@@ -149,6 +150,7 @@ namespace DataObjectExtensionTest
        var result = objOne.IsEqualTo(objTwo);
        Assert.IsTrue(result, "Comparsion of two identical object should pass.");
     }
+
 
     [TestMethod]
     public void SameTypeCompareDiffBoolTest()
@@ -160,6 +162,7 @@ namespace DataObjectExtensionTest
        Assert.IsFalse(result, "Comparsion of two objects of the same type with different values should fail.");
     }
 
+
     [TestMethod]
     public void SameTypeCompareDiffIntTest()
     {
@@ -169,6 +172,7 @@ namespace DataObjectExtensionTest
        var result = objOne.IsEqualTo(objTwo);
        Assert.IsFalse(result, "Comparsion of two objects of the same type with different values should fail.");
     }
+
 
     [TestMethod]
     public void SameTypeCompareDiffStringTest()
@@ -180,6 +184,7 @@ namespace DataObjectExtensionTest
        Assert.IsFalse(result, "Comparsion of two objects of the same type with different values should fail.");
     }
 
+
     [TestMethod]
     public void DifferentTypeCompareDefaultTest()
     {
@@ -188,6 +193,7 @@ namespace DataObjectExtensionTest
        var result = objOne.IsEqualTo(objTwo);
        Assert.IsTrue(result, "Comparsion of two duck type identical objects should pass.");
     }
+
 
     [TestMethod]
     public void DifferentTypeCompareWithUnrelatedPropertyTest()
@@ -204,6 +210,7 @@ namespace DataObjectExtensionTest
        Assert.IsTrue(result, "Comparsion of two duck type identical objects should pass.");
     }
 
+
     [TestMethod]
     public void DifferentTypeCompareWithMissingPropertyTest()
     {
@@ -219,6 +226,7 @@ namespace DataObjectExtensionTest
        Assert.IsFalse(result, "Comparsion of two duck type different objects should fail.");
     }
 
+
     [TestMethod]
     public void DifferentTypeWithMappingTest()
     {
@@ -232,6 +240,7 @@ namespace DataObjectExtensionTest
        Assert.IsTrue(result, "Comparsion of two duck type different objects with a valid mapping should pass.");
     }
 
+
     [TestMethod]
     public void DifferentTypeWithInvalidMappingTest()
     {
@@ -244,6 +253,7 @@ namespace DataObjectExtensionTest
        var result = objOne.IsEqualTo(objTwo,mapList);
        Assert.IsFalse(result, "Comparsion of two duck type different objects with an invalid mapping should fail.");
     }
+
 
     [TestMethod]
     public void DifferentTypeWithMappingAndConversionTest()
@@ -279,6 +289,7 @@ namespace DataObjectExtensionTest
        Assert.IsTrue(result, "Comparsion of two objects with different but excluded values should pass.");
     }
 
+
     [TestMethod]
     public void DifferentTypeWithExcludeSelectionAndMappingTest()
     {
@@ -298,6 +309,49 @@ namespace DataObjectExtensionTest
        var result = objOne.IsEqualTo(objTwo,mapList,(first) => { return first.Name == "StringValue";});
        Assert.IsTrue(result, "Comparsion of two duck type different objects with a valid mapping should pass.");
     }
+
+
+    [TestMethod]
+    public void DifferentTypeWithIncludeSelectionTest()
+    {
+       var objOne = new TestObj1();
+       var objTwo = new TestObj2();
+       objOne.IntValue = 42;
+       objTwo.IntValue = 41;
+       objOne.StringValue = "42";
+       objTwo.StringValue = "42";
+       //
+       // Include the 'StringValue' property into comparsion.
+       //
+       var result = objOne.IsEqualTo(objTwo,null, null,  (first) => { return first.Name == "StringValue";});
+       Assert.IsTrue(result, "Comparsion of two objects with matching included values should pass.");
+    }
+
+
+    [TestMethod]
+    public void DifferentTypeWithIncludeAndExcludeSelectionTest()
+    {
+       var objOne = new TestObj1();
+       var objTwo = new TestObj2();
+       objOne.IntValue = 42;
+       objOne.StringValue = "42";
+       objOne.BoolValue = true;
+       objOne.BoolNullableValue = null;
+
+       objTwo.IntValue = 41;
+       objTwo.StringValue = "41";
+       objTwo.BoolNullableValue = true;
+       objTwo.BoolValue = true;
+
+       //
+       // Exclude the 'IntValue' property from comparsion.
+       // Include the 'IntValue' and 'BoolValue' into comparison.
+       //
+
+       var result = objOne.IsEqualTo(objTwo,null, (first) => { return first.Name == "IntValue";},  (first) => { return (first.Name == "IntValue") || (first.Name == "BoolValue");});
+       Assert.IsTrue(result, "Comparsion of two objects with matching result set values should pass.");
+    }
+
 
     [TestMethod]
     public void CopySameTypeTest()
@@ -319,9 +373,10 @@ namespace DataObjectExtensionTest
 
        var result = objOne.IsEqualTo(objTwo);
 
-       Assert.IsTrue(objOneHash.SequenceEqual(objTwoHash), "Since both objects of the same typ the hash values should be equal.");
-       Assert.IsTrue(result, "Both object should be considered equal after the copy operation.");
+       Assert.IsTrue(objOneHash.SequenceEqual(objTwoHash), "Since both objects are of the same type the hash values should be equal.");
+       Assert.IsTrue(result, "Both objects should be considered equal after the copy operation when calling 'objOne.IsEqualTo(objTwo)'.");
     }
+
 
     [TestMethod]
     public void CopyDifferentTypeTest()
@@ -343,9 +398,10 @@ namespace DataObjectExtensionTest
 
        var result = objOne.IsEqualTo(objTwo);
 
-       Assert.IsFalse(objOneHash.SequenceEqual(objTwoHash), "Since both objects of different typ the hash values should not be equal.");
-       Assert.IsTrue(result, "Both object should be considered equal after the copy operation.");
+       Assert.IsFalse(objOneHash.SequenceEqual(objTwoHash), "Since both objects are of different types the hash values should not be equal.");
+       Assert.IsTrue(result, "Both objects should be considered equal after the copy operation when calling 'objOne.IsEqualTo(objTwo)'.");
     }
+
 
     [TestMethod]
     public void CopyDifferentTypeFail()
@@ -364,7 +420,6 @@ namespace DataObjectExtensionTest
 
        Assert.ThrowsException<DataObjectExtension.DataObjectExtensionException>( () => { objTwo.CopyTo(objOne); }, "The copy operation should fail with a 'DataObjectExtensionException' because the target object is missing some properties.");
     }
-
 
   }//END class
 }//END namespace
